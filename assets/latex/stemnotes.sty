@@ -1,0 +1,370 @@
+%% stemnotes.sty — shared core for STEM course notes
+%% One semantic API (environments, notation macros, fidelity markers),
+%% three interchangeable looks: style=classic | tufte | boxed.
+%% Works with LuaLaTeX (recommended), XeLaTeX and pdfLaTeX.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{stemnotes}[2026/10/16 v1.0 STEM course notes core]
+
+%% ---------------------------------------------------------------- options
+\RequirePackage{etoolbox}
+\RequirePackage{kvoptions}
+\SetupKeyvalOptions{family=sn,prefix=sn@}
+\DeclareStringOption[classic]{style}   % classic | tufte | boxed | none (imposed class or preamble)
+\DeclareBoolOption[true]{theorems}     % false: declare no block environment (the class provides them)
+\DeclareStringOption[french]{lang}     % french | english
+\DeclareStringOption[arrow]{vectors}   % arrow | bold
+\DeclareStringOption[draft]{mode}      % draft | final
+\ProcessKeyvalOptions*
+
+\newif\ifsn@french
+\ifdefstring{\sn@lang}{french}{\sn@frenchtrue}{}
+\newif\ifsn@draft
+\ifdefstring{\sn@mode}{final}{\sn@draftfalse}{\sn@drafttrue}
+\newcommand\sn@name[2]{\ifsn@french#1\else#2\fi}
+
+%% ---------------------------------------------------------------- engine
+\RequirePackage{iftex}
+\newif\ifsn@unicode
+\iftutex\sn@unicodetrue\fi
+\ifsn@unicode\else
+  \RequirePackage[T1]{fontenc}
+  \IfFileExists{lmodern.sty}{\RequirePackage{lmodern}}{}% base for families a style leaves unset
+\fi
+
+%% ---------------------------------------------------------------- language
+\@ifpackageloaded{babel}{}{% an imposed class may already load babel
+  \ifsn@french
+    \RequirePackage[english,french]{babel}
+  \else
+    \RequirePackage[english]{babel}
+  \fi}
+\ifsn@french
+  \ifdefined\frenchsetup\frenchsetup{StandardLists=true,SmallCapsFigTabCaptions=false}\fi
+  \addto\captionsfrench{\def\tablename{Tableau}}
+\fi
+\RequirePackage{csquotes}
+
+%% ---------------------------------------------------------------- math
+\RequirePackage{amsmath}
+\RequirePackage{mathtools}
+\RequirePackage{amsthm}
+
+%% ---------------------------------------------------------------- colours (styles may redefine)
+\RequirePackage{xcolor}
+\definecolor{sn@ink}{HTML}{1A1A1A}
+\definecolor{sn@accent}{HTML}{1F3A68}
+\definecolor{sn@link}{HTML}{1F3A68}
+\definecolor{sn@muted}{HTML}{6B7280}
+\definecolor{sn@rule}{HTML}{C9CED6}
+\definecolor{sn@string}{HTML}{8A4B08}
+\definecolor{sn@warn}{HTML}{C2410C}   % uncertain reading: always visible
+\definecolor{sn@fix}{HTML}{0F766E}    % corrected slip (draft only)
+\definecolor{sn@added}{HTML}{6D28D9}  % content not in the source
+
+%% ---------------------------------------------------------------- general packages
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning,decorations.markings,patterns}
+\ifsn@french\usetikzlibrary{babel}\fi
+\RequirePackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\RequirePackage[most]{tcolorbox}
+\RequirePackage{booktabs,array}
+\RequirePackage{enumitem}
+\setlist{itemsep=.25em,topsep=.5em}
+\RequirePackage{caption}
+\RequirePackage{subcaption}
+\RequirePackage{float}
+\RequirePackage{changepage}
+\RequirePackage{marginnote}
+\RequirePackage{siunitx}
+\ifsn@french\sisetup{locale=FR}\fi
+\RequirePackage[version=4]{mhchem}
+\RequirePackage{listings}
+\RequirePackage{algorithm}
+\RequirePackage[noend]{algpseudocode}
+
+%% true inside any tcolorbox (margin material must then use \marginnote)
+\newif\ifsn@inbox
+\tcbset{every box/.append style={code={\sn@inboxtrue}}}
+
+%% ---------------------------------------------------------------- title metadata
+\let\sn@subtitle\@empty
+\let\sn@basedon\@empty
+\let\sn@runningtitle\@empty
+\ifdefined\subtitle\else\newcommand\subtitle[1]{\def\sn@subtitle{#1}}\fi% KOMA has its own
+\newcommand\basedon[1]{\def\sn@basedon{#1}}       % provenance of the source material
+\newcommand\runningtitle[1]{\def\sn@runningtitle{#1}}
+\title{}% running heads must not fail when the source has no title
+\newcommand\sn@basedonlabel{\sn@name{D'après~:}{Based on:}}
+\newcommand\sn@runtitle{{\let\\\space\ifx\sn@runningtitle\@empty\@title\else\sn@runningtitle\fi}}
+
+%% helper for styles (Unicode engines): Inconsolata if installed, else Latin Modern Mono
+\newcommand\sn@monofont[1]{%
+  \IfFontExistsTF{Inconsolatazi4-Regular.otf}
+    {\setmonofont{Inconsolatazi4-Regular.otf}[BoldFont=Inconsolatazi4-Bold.otf,Scale=#1]}
+    {\setmonofont{Latin Modern Mono}}}
+
+%% ---------------------------------------------------------------- style
+\IfFileExists{stemnotes-\sn@style.sty}
+  {\RequirePackage{stemnotes-\sn@style}}
+  {\PackageError{stemnotes}{Unknown style `\sn@style'}{Use style=classic, tufte or boxed.}}
+
+%% ---------------------------------------------------------------- after fonts
+%% from here on, "unicode" means unicode-math is in use (style=none may not load it)
+\@ifpackageloaded{unicode-math}{\sn@unicodetrue}{\sn@unicodefalse}
+\ifsn@unicode\else
+  \ifdefined\Bbbk\else\RequirePackage{amssymb}\fi
+  \RequirePackage{bm}
+  \ifdefined\llbracket\else\RequirePackage{stmaryrd}\fi
+\fi
+\RequirePackage{microtype}
+\ifnum\tracinglostchars<2 \tracinglostchars=2 \fi % log every glyph missing from the font
+
+%% ---------------------------------------------------------------- code and algorithms
+\lstdefinestyle{stemnotes}{
+  basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true,
+  breaklines=true, upquote=true, showstringspaces=false, tabsize=4,
+  numbers=left, numberstyle=\scriptsize\color{sn@muted}, numbersep=8pt,
+  keywordstyle=\color{sn@accent}\bfseries, commentstyle=\color{sn@muted}\itshape,
+  stringstyle=\color{sn@string}, extendedchars=true,
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {â}{{\^a}}1
+           {ç}{{\c c}}1 {ù}{{\`u}}1 {û}{{\^u}}1 {ô}{{\^o}}1 {î}{{\^i}}1
+           {ï}{{\"i}}1 {ë}{{\"e}}1 {É}{{\'E}}1 {À}{{\`A}}1
+}
+\lstset{style=stemnotes}
+\ifsn@french
+  \floatname{algorithm}{Algorithme}
+  \renewcommand\lstlistingname{Code}
+  \algrenewcommand\algorithmicrequire{\textbf{Entrée~:}}
+  \algrenewcommand\algorithmicensure{\textbf{Sortie~:}}
+  \algrenewcommand\algorithmicif{\textbf{si}}
+  \algrenewcommand\algorithmicthen{\textbf{alors}}
+  \algrenewcommand\algorithmicelse{\textbf{sinon}}
+  \algrenewcommand\algorithmicfor{\textbf{pour}}
+  \algrenewcommand\algorithmicforall{\textbf{pour tout}}
+  \algrenewcommand\algorithmicwhile{\textbf{tant que}}
+  \algrenewcommand\algorithmicdo{\textbf{faire}}
+  \algrenewcommand\algorithmicrepeat{\textbf{répéter}}
+  \algrenewcommand\algorithmicuntil{\textbf{jusqu'à}}
+  \algrenewcommand\algorithmicreturn{\textbf{renvoyer}}
+  \algrenewcommand\algorithmicfunction{\textbf{fonction}}
+  \algrenewcommand\algorithmicprocedure{\textbf{procédure}}
+\fi
+
+%% ---------------------------------------------------------------- links and references
+\@ifpackageloaded{hyperref}{}{%
+  \RequirePackage[pdfusetitle]{hyperref}
+  \hypersetup{colorlinks=true,linkcolor=sn@link,citecolor=sn@link,urlcolor=sn@link}}
+\@ifpackageloaded{cleveref}{}{%
+  \ifsn@french
+    \RequirePackage[french,nameinlink,noabbrev]{cleveref}
+  \else
+    \RequirePackage[english,nameinlink,noabbrev,capitalise]{cleveref}
+  \fi}
+
+%% ---------------------------------------------------------------- theorem-like environments
+%% Every style must define the theorem styles snplain, sndefinition, snremark.
+%% All numbered environments share one counter, numbered within sections.
+%% An environment the class already defines is kept as it is (imposed templates);
+%% with theorems=false none is declared.
+\newcommand\sn@thm[3]{% name, shared counter, printed name
+  \ifcsundef{#1}{\newtheorem{#1}[#2]{#3}}{\PackageInfo{stemnotes}{keeping the class's `#1'}}}
+\ifsn@theorems
+  \theoremstyle{snplain}
+  \ifcsundef{theorem}{\newtheorem{theorem}{\sn@name{Théorème}{Theorem}}[section]}{}
+  \sn@thm{proposition}{theorem}{\sn@name{Proposition}{Proposition}}
+  \sn@thm{lemma}{theorem}{\sn@name{Lemme}{Lemma}}
+  \sn@thm{corollary}{theorem}{\sn@name{Corollaire}{Corollary}}
+  \sn@thm{property}{theorem}{\sn@name{Propriété}{Property}}
+  \sn@thm{law}{theorem}{\sn@name{Loi}{Law}}
+  \theoremstyle{sndefinition}
+  \sn@thm{definition}{theorem}{\sn@name{Définition}{Definition}}
+  \sn@thm{example}{theorem}{\sn@name{Exemple}{Example}}
+  \sn@thm{exercise}{theorem}{\sn@name{Exercice}{Exercise}}
+  \sn@thm{method}{theorem}{\sn@name{Méthode}{Method}}
+  \theoremstyle{snremark}
+  \sn@thm{remark}{theorem}{\sn@name{Remarque}{Remark}}
+  \ifcsundef{notation}{\newtheorem*{notation}{\sn@name{Notation}{Notation}}}{}
+\fi
+\ifcsundef{solution}{\newenvironment{solution}{\begin{proof}[\sn@name{Solution}{Solution}]}{\end{proof}}}{}
+
+\ifsn@french
+  \crefname{theorem}{théorème}{théorèmes}           \Crefname{theorem}{Théorème}{Théorèmes}
+  \crefname{proposition}{proposition}{propositions} \Crefname{proposition}{Proposition}{Propositions}
+  \crefname{lemma}{lemme}{lemmes}                   \Crefname{lemma}{Lemme}{Lemmes}
+  \crefname{corollary}{corollaire}{corollaires}     \Crefname{corollary}{Corollaire}{Corollaires}
+  \crefname{property}{propriété}{propriétés}        \Crefname{property}{Propriété}{Propriétés}
+  \crefname{law}{loi}{lois}                         \Crefname{law}{Loi}{Lois}
+  \crefname{definition}{définition}{définitions}    \Crefname{definition}{Définition}{Définitions}
+  \crefname{example}{exemple}{exemples}             \Crefname{example}{Exemple}{Exemples}
+  \crefname{exercise}{exercice}{exercices}          \Crefname{exercise}{Exercice}{Exercices}
+  \crefname{method}{méthode}{méthodes}              \Crefname{method}{Méthode}{Méthodes}
+  \crefname{remark}{remarque}{remarques}            \Crefname{remark}{Remarque}{Remarques}
+  \crefname{algorithm}{algorithme}{algorithmes}     \Crefname{algorithm}{Algorithme}{Algorithmes}
+  \crefname{figure}{figure}{figures}                \Crefname{figure}{Figure}{Figures}
+  \crefname{table}{tableau}{tableaux}               \Crefname{table}{Tableau}{Tableaux}
+\else
+  \crefname{property}{property}{properties}
+  \crefname{law}{law}{laws}
+  \crefname{method}{method}{methods}
+  \crefname{exercise}{exercise}{exercises}
+\fi
+
+\providecommand\sn@afterthms{}
+\sn@afterthms
+
+%% ---------------------------------------------------------------- layout helpers (styles may override)
+\providecommand\aside[1]{\footnote{#1}}
+\providecommand\sn@mfigbegin{\begin{figure}[htbp]\centering}
+\providecommand\sn@mfigend{\end{figure}}
+\newenvironment{marginfigure}{\sn@mfigbegin}{\sn@mfigend}
+\providecommand\sn@widebegin{}
+\providecommand\sn@wideend{}
+\newenvironment{wide}{\sn@widebegin}{\sn@wideend}
+
+%% ---------------------------------------------------------------- fidelity markers
+%% draft: every departure from the source is visible, with a legend under the title.
+%% final: allowed only once everything is resolved. An unresolved \illegible, \missing,
+%%        \suspect or \ambiguous is an error; only `added` blocks stay visible.
+\definecolor{sn@suspect}{HTML}{B91C1C}  % suspected error in the source
+\definecolor{sn@amb}{HTML}{0369A1}      % notation to confirm
+\newcount\sn@nopen
+\newcommand\sn@unresolved[1]{%
+  \ifmeasuring@\else % amsmath typesets align & co. twice: count the final pass only
+    \global\advance\sn@nopen\@ne
+    \ifsn@draft\else
+      \PackageError{stemnotes}{Unresolved \@backslashchar#1 in mode=final}%
+        {Resolve it with the user (verify_fidelity.py lists it), or go back to mode=draft.}%
+    \fi
+  \fi}
+\newcommand\sn@mark[3]{% colour, content, sign
+  % The sign is bracketed and in sans serif so it cannot be read as mathematics
+  % (a bare ! after an exponent would look like a factorial); in maths the
+  % marked span is also underlined to show its exact extent.
+  \ifmmode{\color{#1}\underline{#2}}^{\text{\normalfont\sffamily\tiny[#3]}}%
+  \else{\color{#1}#2\textsuperscript{\normalfont\sffamily[#3]}}\fi}
+% Source anchor: shown in draft, hidden in final.
+\newcommand\src[1]{%
+  \ifsn@draft
+    \ifmmode\text{\sn@srctag{#1}}\else\leavevmode\sn@srctag{#1}\fi
+  \else
+    % final: still release a pending theorem head, so a list that follows
+    % starts on its own line exactly as in draft
+    \if@inlabel\leavevmode\fi
+  \fi\ignorespaces}
+\newcommand\sn@srctag[1]{{\normalfont\sffamily\scriptsize\color{sn@muted}\,[#1]\,}}
+% The optional first argument of the four open marks locates the passage on the
+% source image, for the answer sheet's crops: [p02@x0,y0,x1,y1] in fractions of the
+% page image (0,0 = top left), or [p02] for the whole page. It is never typeset.
+% Uncertain reading.            \illegible[region]{best reading}
+\newcommand\illegible[2][]{\sn@unresolved{illegible}%
+  \ifsn@draft\sn@mark{sn@warn}{#2}{?}\else#2\fi}
+% Suspected error in the source, typeset AS IN THE SOURCE.   \suspect[region]{as written}{evidence}
+\newcommand\suspect[3][]{\sn@unresolved{suspect}%
+  \ifsn@draft\sn@mark{sn@suspect}{#2}{!}\else#2\fi}
+% Notation whose meaning or convention must be confirmed.    \ambiguous[region]{as written}{question}
+\newcommand\ambiguous[3][]{\sn@unresolved{ambiguous}%
+  \ifsn@draft\sn@mark{sn@amb}{#2}{n?}\else#2\fi}
+% Unreadable, cut or absent passage.   \missing[region]{what is missing}
+\newcommand\missing[2][]{\sn@unresolved{missing}%
+  \ifsn@draft\ifmmode\text{\sn@missingtag{#2}}\else\sn@missingtag{#2}\fi\fi}
+% Resolved by the user WITHOUT certainty (answer "I don't know", option a or b).
+% They do not block final; the report lists them.
+% \accepted{reading}: best reading accepted by the user; plain in final, tagged in draft.
+\newcommand\accepted[1]{\ifsn@draft\sn@mark{sn@muted}{#1}{acc.}\else#1\fi}
+% \omitted{what}: unresolved passage the user chose to omit; nothing in final.
+\newcommand\omitted[1]{\ifsn@draft
+  \ifmmode\text{\sn@omittedtag}\else\leavevmode\sn@omittedtag\fi\fi\ignorespaces}
+\newcommand\sn@omittedtag{{\normalfont\sffamily\scriptsize\color{sn@muted}[\sn@name{omis}{omitted}]}}
+\newcommand\sn@missingtag[1]{{\normalfont\sffamily\footnotesize\color{sn@warn}%
+  [\sn@name{passage illisible~:}{illegible passage:} #1]}}
+% Approved correction: highlighted in draft, plain in final.  \fixed{original}{corrected}
+\newcommand\fixed[2]{\ifsn@draft{\color{sn@fix}#2}\else#2\fi}
+% Crossed-out text in the source: never typeset, tagged in draft, listed in the report.
+\newcommand\struck[1]{\ifsn@draft
+  \ifmmode\text{\sn@struckttag}\else\leavevmode\sn@struckttag\fi\fi\ignorespaces}
+\newcommand\sn@struckttag{{\normalfont\sffamily\scriptsize\color{sn@muted}[\sn@name{barré}{struck out}]}}
+% Content that is NOT in the source: visibly marked in every mode.
+\tcbset{sn@added/.style={enhanced,breakable,blanker,
+  borderline west={1.2pt}{0pt}{sn@added},left=10pt,
+  before skip=.8\baselineskip,after skip=.8\baselineskip,
+  before upper={\noindent{\sffamily\scriptsize\bfseries\color{sn@added}%
+    \sn@name{COMPLÉMENT --- absent du support original}{ADDED --- not in the source}}\par\smallskip}}}
+\newenvironment{added}{\begin{tcolorbox}[sn@added]}{\end{tcolorbox}}
+% Legend under the title, draft only.
+\newcommand\sn@draftlegend{%
+  \ifsn@draft\par\begingroup\centering\sffamily\scriptsize\color{sn@muted}%
+    \sn@name{BROUILLON. Marques~:}{DRAFT. Marks:}
+    [p03]~\sn@name{page source}{source page} \textperiodcentered\
+    \textcolor{sn@warn}{x\textsuperscript{[?]}}~\sn@name{lecture incertaine}{uncertain reading} \textperiodcentered\
+    \textcolor{sn@suspect}{x\textsuperscript{[!]}}~\sn@name{erreur suspectée dans la source}{suspected error in the source} \textperiodcentered\
+    \textcolor{sn@amb}{x\textsuperscript{[n?]}}~\sn@name{notation à confirmer}{notation to confirm} \textperiodcentered\
+    \textcolor{sn@warn}{[\dots]}~\sn@name{passage manquant}{missing passage} \textperiodcentered\
+    \textcolor{sn@fix}{x}~\sn@name{correction approuvée}{approved correction} \textperiodcentered\
+    [\sn@name{barré}{struck out}]~\sn@name{texte barré omis}{crossed-out text omitted} \textperiodcentered\
+    x\textsuperscript{[acc.]}~\sn@name{lecture acceptée sans certitude}{reading accepted without certainty} \textperiodcentered\
+    [\sn@name{omis}{omitted}]~\sn@name{passage non résolu omis}{unresolved passage omitted}\par
+  \endgroup\bigskip\fi}
+\AtBeginDocument{\apptocmd{\maketitle}{\sn@draftlegend}{}{}}
+\AtEndDocument{%
+  \ifnum\sn@nopen>\z@
+    \PackageWarningNoLine{stemnotes}{\the\sn@nopen\space open marker(s), see verify_fidelity.py}\fi}
+
+%% ---------------------------------------------------------------- notation macros (generic)
+%% Course-specific notation goes in notation.tex, built in phase 2.
+\newcommand\N{\mathbb{N}}
+\newcommand\Z{\mathbb{Z}}
+\newcommand\Q{\mathbb{Q}}
+\newcommand\R{\mathbb{R}}
+\newcommand\C{\mathbb{C}}
+\newcommand\K{\mathbb{K}}
+\newcommand\dd{\mathop{}\!\mathrm{d}}
+\newcommand\e{\mathrm{e}}
+\newcommand\ii{\mathrm{i}}
+\newcommand\jj{\mathrm{j}}
+\DeclareRobustCommand\transp{^{\mathsf{T}}}% newtxmath/newpxmath define their own
+\newcommand\eqdef{\coloneqq}
+\AtBeginDocument{\renewcommand\eqdef{\coloneqq}}% unicode-math would turn it into U+225D
+\newcommand\dv[3][]{\frac{\dd^{#1}#2}{\dd #3^{#1}}}
+\newcommand\pdv[3][]{\frac{\partial^{#1}#2}{\partial #3^{#1}}}
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\DeclarePairedDelimiterX\inner[2]{\langle}{\rangle}{#1,#2}
+\DeclarePairedDelimiterX\set[1]{\{}{\}}{#1}
+% intervals: French ]a,b[ or English (a,b)
+\newcommand\icc[2]{\mathopen{[}#1\mathpunct{,}#2\mathclose{]}}
+\newcommand\ioo[2]{\ifsn@french\mathopen{]}#1\mathpunct{,}#2\mathclose{[}\else\mathopen{(}#1\mathpunct{,}#2\mathclose{)}\fi}
+\newcommand\ico[2]{\ifsn@french\mathopen{[}#1\mathpunct{,}#2\mathclose{[}\else\mathopen{[}#1\mathpunct{,}#2\mathclose{)}\fi}
+\newcommand\ioc[2]{\ifsn@french\mathopen{]}#1\mathpunct{,}#2\mathclose{]}\else\mathopen{(}#1\mathpunct{,}#2\mathclose{]}\fi}
+\ifsn@unicode
+  \newcommand\intint[2]{\mathopen{\lBrack}#1\mathpunct{,}#2\mathclose{\rBrack}}
+\else
+  \newcommand\intint[2]{\mathopen{\llbracket}#1\mathpunct{,}#2\mathclose{\rrbracket}}
+\fi
+% vectors and matrices
+\ifdefstring{\sn@vectors}{bold}
+  {\ifsn@unicode\newcommand\vect[1]{\symbf{#1}}\else\newcommand\vect[1]{\bm{#1}}\fi}
+  {\newcommand\vect[1]{\vec{#1}}}
+\ifsn@unicode\newcommand\mat[1]{\symbfup{#1}}\else\newcommand\mat[1]{\mathbf{#1}}\fi
+\providecommand\vv[1]{\overrightarrow{#1}}
+% vector calculus: French or English convention
+\ifsn@french
+  \newcommand\grad{\overrightarrow{\operatorname{grad}}\,}
+  \newcommand\divg{\operatorname{div}}
+  \newcommand\rot{\overrightarrow{\operatorname{rot}}\,}
+  \newcommand\lapl{\Delta}
+\else
+  \newcommand\grad{\nabla}
+  \newcommand\divg{\nabla\cdot}
+  \newcommand\rot{\nabla\times}
+  \newcommand\lapl{\nabla^2}
+\fi
+\DeclareMathOperator\tr{tr}
+\DeclareMathOperator\rank{\sn@name{rg}{rank}}
+\DeclareMathOperator\Vect{Vect}
+\DeclareMathOperator\sgn{sgn}
+
+\endinput

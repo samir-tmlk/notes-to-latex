@@ -1,0 +1,184 @@
+% Demonstration document for the three styles. Content is illustrative only.
+% Compile: copy the four stemnotes*.sty files from ../ next to this file, then lualatex example.tex (or pdflatex)
+% Change the look by editing ONE option: style=classic | tufte | boxed
+\documentclass[11pt]{article}
+\usepackage[style=classic,lang=french,vectors=arrow,mode=draft]{stemnotes}
+\input{notation}
+
+\title{Équations différentielles linéaires du premier ordre}
+\subtitle{Théorie, application au circuit RC, résolution numérique}
+\author{Cours de M\texorpdfstring{\textsuperscript{me}}{me} Exemple}
+\date{Semestre 2}
+\basedon{notes manuscrites du cours (pages 1 à 4, photographiées)}
+\runningtitle{Équations différentielles linéaires}
+
+\begin{document}
+\maketitle
+
+\section{Définitions et résultat fondamental}
+
+\src{p01}
+Dans tout ce chapitre, $I$ désigne un intervalle de $\R$ non réduit à un point
+et $a, b \colon I \to \R$ des fonctions continues.
+
+\begin{definition}[Équation linéaire d'ordre 1]\label{def-edl1}
+\src{p01}
+On appelle \emph{équation différentielle linéaire du premier ordre} l'équation
+\begin{equation}\label{eq-edl}
+  y' + a(t)\,y = b(t), \qquad t \in I.
+\end{equation}
+Elle est dite \emph{homogène} lorsque $b = 0$. Une \emph{solution} est une fonction
+$y \in \mathcal{C}^1(I,\R)$ qui vérifie \eqref{eq-edl} en tout point de $I$.
+\end{definition}
+
+\begin{notation}
+\src{p01}
+On note $A$ une primitive de $a$ sur $I$, et $\Sol$ l'ensemble des solutions de \eqref{eq-edl}.
+\end{notation}
+
+\begin{theorem}[Structure des solutions]\label{thm-structure}
+\src{p02}
+Les solutions de l'équation homogène sont les fonctions $t \mapsto \lambda\,\e^{-A(t)}$,
+$\lambda \in \R$. Si $y_p$ est une solution particulière de \eqref{eq-edl}, alors
+\[
+  \Sol = \set*{ t \mapsto y_p(t) + \lambda\,\e^{-A(t)} \;\middle|\; \lambda \in \R }.
+\]
+\end{theorem}
+
+\begin{proof}
+\src{p02}
+Soit $y$ dérivable sur $I$ et $z \eqdef y\,\e^{A}$. Alors
+\begin{align*}
+  z' &= \frac{\illegible[p02@0.30,0.18,0.42,0.24]{\dd}}{\dd t}\bigl(y\,\e^{A}\bigr) % marker inside a fraction
+      = y'\,\e^{A} + y\,a_{\illegible[p02@0.58,0.18,0.66,0.24]{1}}\,\e^{A}   % marker inside a subscript
+     \\
+     &= (y' + a y)\,\e^{A},
+\end{align*}
+donc $y$ est solution homogène si et seulement si $z' = 0$
+sur l'intervalle $I$, c'est-à-dire $z$ constante.\aside{L'hypothèse \og $I$ intervalle\fg{}
+est essentielle : sur une réunion d'intervalles, $z$ est seulement localement constante.}
+Le cas général s'en déduit par linéarité.
+\end{proof}
+
+\begin{property}[Problème de Cauchy]\label{prop-cauchy}
+\src{p02}
+Pour tout $(t_0, y_0) \in I \times \R$, il existe une unique solution de \eqref{eq-edl}
+telle que $y(t_0) = y_0$, donnée par
+\[
+  y(t) = \e^{-A(t)} \left( y_0\,\e^{A(t_0)} + \int_{t_0}^{t} b(s)\,\e^{A(s)} \dd s \right),
+  \qquad A(t) = \int_{\illegible[p02@0.62,0.40,0.78,0.47]{t_0}}^{t} a(u) \dd u .
+\]
+\end{property}
+
+\begin{remark}
+\src{p02}
+La méthode de \emph{variation de la constante} consiste à chercher une solution
+de la forme $y = \lambda(t)\,\e^{-A(t)}$ ; elle redonne la formule de la
+\cref{prop-cauchy}.
+\end{remark}
+
+\section{Application : charge d'un condensateur}
+
+\src{p03}
+On considère un circuit RC série alimenté par un échelon de tension $E$ à $t = 0$.
+
+\begin{law}[Loi des mailles]\label{law-mailles}
+\src{p03}
+Dans une maille, la somme algébrique des tensions est nulle :
+$E = R\,i + u_C$ avec $\ambiguous[p03@0.40,0.12,0.48,0.17]{i}{convention récepteur ? orientation du courant non indiquée} = C \dv{u_C}{t}$.
+\end{law}
+
+\begin{marginfigure}
+\begin{tikzpicture}
+  \begin{axis}[width=4.9cm,height=3.7cm,axis lines=left,xlabel={$t/\tau$},ylabel={$u_C/E$},
+    xmin=0,xmax=5,ymin=0,ymax=1.1,ytick={0,1},xtick={0,1,2,3,4,5},
+    tick label style={font=\scriptsize},label style={font=\scriptsize}]
+    \addplot[domain=0:5,samples=60,thick,sn@accent] {1-exp(-x)};
+    \addplot[domain=0:1.6,dashed,sn@muted] {x};
+  \end{axis}
+\end{tikzpicture}
+\caption{Charge du condensateur ; la tangente à l'origine coupe l'asymptote en $t=\tau$.\src{p03}}\label{fig-charge}
+\end{marginfigure}
+
+\begin{example}[Circuit RC]\label{ex-rc}
+\src{p03}
+La \cref{law-mailles} donne $\tau \dv{u_C}{t} + u_C = E$ avec $\tau = RC$, de la forme
+\eqref{eq-edl}. Avec $u_C(0) = 0$, le \cref{thm-structure} fournit
+\[
+  u_C(t) = E\left(1 - \e^{-t/\tau}\right).
+\]
+Pour $R = \qty{10}{\kilo\ohm}$ et $C = \fixed{\qty{100}{\micro\farad}}{\qty{10}{\micro\farad}}$, on obtient
+$\tau = \qty{0,1}{\second}$.
+\end{example}
+
+\begin{method}[Résoudre une équation linéaire d'ordre 1]
+\src{p03}
+\begin{enumerate}
+  \item Mettre l'équation sous la forme normalisée \eqref{eq-edl}.
+  \item Résoudre l'équation homogène : $y_h(t) = \lambda\,\suspect[p03@0.48,0.70,0.62,0.75]{\e^{A(t)}}{signe : le théorème 1.2 donne e^{-A(t)}}$.
+  \item Chercher une solution particulière (forme du second membre, ou variation de la constante).
+  \item Appliquer la condition initiale pour fixer $\lambda$.
+\end{enumerate}
+\end{method}
+
+\section{Résolution numérique}
+
+\src{p04}
+Pour $y' = f(t,y)$ et un pas $h > 0$, le schéma d'Euler explicite approche
+$y(t_{k+1})$ par $y_k + h\,f(t_k, y_k)$.
+
+\begin{algorithm}[htbp]
+\caption{Schéma d'Euler explicite\src{p04}}\label{alg-euler}
+\begin{algorithmic}[1]
+  \Require $f$, $t_0$, $y_0$, pas $h$, nombre de pas $n$
+  \Ensure approximations $y_0, \dots, y_n$
+  \For{$k = 0$ \textbf{à} $n-1$}
+    \State $y_{k+1} \gets y_k + h\, f(t_k, y_k)$
+    \State $t_{k+1} \gets t_k + h$
+  \EndFor
+  \State \Return $(y_0, \dots, y_n)$
+\end{algorithmic}
+\end{algorithm}
+
+\src{p04}
+\begin{lstlisting}[language=Python,caption={Implémentation de l'\cref{alg-euler}}]
+def euler(f, t0, y0, h, n):
+    """Schéma d'Euler explicite."""
+    ts, ys = [t0], [y0]
+    for _ in range(n):
+        ys.append(ys[-1] + h * f(ts[-1], ys[-1]))
+        ts.append(ts[-1] + h)
+    return ts, ys
+\end{lstlisting}
+
+\begin{table}[htbp]
+\centering
+\caption{Erreur en $t = 1$ pour $y' = -y$, $y(0) = 1$.\src{p04}}\label{tab-err}
+\begin{tabular}{@{}S[table-format=1.3]S[table-format=1.2e-1]@{}}
+\toprule
+{Pas $h$} & {Erreur absolue} \\
+\midrule
+0.1   & 1.92e-2 \\
+0.01  & 1.85e-3 \\
+0.001 & 1.84e-4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{exercise}\label{exo-ordre}
+\src{p04}
+\struck{Montrer que} À l'aide du \cref{tab-err}, conjecturer l'ordre du schéma d'Euler. \missing[p04@0.05,0.92,0.95,1.00]{fin de l'énoncé coupée sur la photo}
+\end{exercise}
+
+\begin{solution}
+\src{p04}
+Quand $h$ est divisé par $10$, l'erreur est divisée par $10$ environ : l'erreur est
+proportionnelle à $h$, le schéma est d'ordre $1$.
+\end{solution}
+
+\begin{added}
+Le schéma d'Euler explicite n'est stable pour $y' = -\lambda y$ ($\lambda > 0$) que si
+$h < 2/\lambda$. Ce point n'est pas traité dans les notes d'origine.
+\end{added}
+
+\end{document}

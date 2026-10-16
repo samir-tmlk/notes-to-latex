@@ -1,0 +1,130 @@
+%% stemnotes-boxed.sty — "Boxed": modern lecture-notes look.
+%% Charter text, sans-serif headings, colour-coded boxes per environment
+%% family (definition, result, example, method, exercise, remark).
+%% Loaded by stemnotes.sty; do not load directly.
+\ProvidesPackage{stemnotes-boxed}[2026/10/16 v1.0 boxed style]
+
+%% fonts: Charter + sans headings, with fallbacks for minimal installations
+\ifsn@unicode
+  \RequirePackage{unicode-math}
+  \IfFontExistsTF{XCharter-Roman.otf}
+    {\setmainfont{XCharter}[Extension=.otf,UprightFont=*-Roman,BoldFont=*-Bold,
+       ItalicFont=*-Italic,BoldItalicFont=*-BoldItalic]}{}
+  \IfFontExistsTF{XCharter-Math.otf}
+    {\setmathfont{XCharter-Math.otf}}
+    {\setmathfont{Latin Modern Math}}
+  \IfFontExistsTF{Source Sans 3}{\setsansfont[Scale=0.94]{Source Sans 3}}
+   {\IfFontExistsTF{Source Sans Pro}{\setsansfont[Scale=0.94]{Source Sans Pro}}
+   {\IfFontExistsTF{TeX Gyre Heros}{\setsansfont[Scale=0.88]{TeX Gyre Heros}}{}}}
+  \sn@monofont{0.95}
+\else
+  \IfFileExists{XCharter.sty}
+    {\RequirePackage[scaled=.98]{XCharter}%
+     \RequirePackage[charter,vvarbb,scaled=1.05]{newtxmath}}
+    {\RequirePackage{charter}}
+  \IfFileExists{sourcesanspro.sty}
+    {\RequirePackage[type1]{sourcesanspro}}
+    {\RequirePackage[scaled=.88]{helvet}}
+  \IfFileExists{inconsolata.sty}{\RequirePackage[scaled=0.95]{inconsolata}}{}
+\fi
+\linespread{1.04}
+
+%% page
+\RequirePackage[a4paper,textwidth=150mm,headheight=14pt,top=28mm,bottom=30mm,headsep=9mm,footskip=13mm]{geometry}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{.55\baselineskip plus 2pt}
+
+%% palette: dark accents for print, 6% tints for fills, distinct luminances
+\definecolor{sn@accent}{HTML}{1E4E8C}
+\definecolor{sn@link}{HTML}{1E4E8C}
+\definecolor{sn@ink}{HTML}{1C2430}
+\definecolor{sn@thm}{HTML}{A23B4D}   % theorem, proposition, lemma, corollary, property, law
+\definecolor{sn@def}{HTML}{2B5C9E}   % definition, notation
+\definecolor{sn@ex}{HTML}{2F7D62}    % example
+\definecolor{sn@meth}{HTML}{A8650A}  % method
+\definecolor{sn@exo}{HTML}{4B5563}   % exercise
+\definecolor{sn@rem}{HTML}{9CA3AF}   % remark
+\colorlet{sn@head}{sn@accent}
+
+%% headings (titlesec), running heads (fancyhdr), equations numbered within sections
+\RequirePackage{titlesec}
+\RequirePackage{fancyhdr}
+\numberwithin{equation}{section}
+%% heading look: sans, coloured numbers, thin rule under sections
+\titleformat{\section}{\normalfont\sffamily\Large\bfseries\color{sn@ink}}
+  {\textcolor{sn@accent}{\thesection}}{.7em}{}[{\vspace{2pt}\color{sn@rule}\titlerule[.6pt]}]
+\titleformat{\subsection}{\normalfont\sffamily\large\bfseries\color{sn@ink}}
+  {\textcolor{sn@accent}{\thesubsection}}{.7em}{}
+\titleformat{\subsubsection}{\normalfont\sffamily\normalsize\bfseries\color{sn@ink}}
+  {\textcolor{sn@accent}{\thesubsubsection}}{.6em}{}
+\titlespacing*{\section}{0pt}{3ex plus 1ex minus .2ex}{1.2ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{2.4ex plus .8ex minus .2ex}{.6ex plus .2ex}
+\titlespacing*{\subsubsection}{0pt}{1.8ex plus .5ex minus .2ex}{.4ex plus .2ex}
+
+%% running heads
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand\sectionmark[1]{\markboth{\thesection\quad#1}{}}
+\fancyhead[L]{\sffamily\footnotesize\color{sn@muted}\sn@runtitle}
+\fancyhead[R]{\sffamily\footnotesize\color{sn@muted}\leftmark}
+\fancyfoot[C]{\sffamily\small\thepage}
+\renewcommand\headrulewidth{.4pt}
+\renewcommand\headrule{{\color{sn@rule}\hrule\@width\headwidth\@height\headrulewidth\vskip-\headrulewidth}}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\sffamily\small\thepage}\renewcommand\headrulewidth{0pt}}
+
+%% captions, lists, code
+\captionsetup{font=small,labelfont={sf,bf,color=sn@accent},labelsep=period}
+\setlist[itemize]{label=\textcolor{sn@accent}{\textbullet}}
+\lstset{backgroundcolor=\color{sn@exo!5!white},frame=l,framerule=1.5pt,
+  rulecolor=\color{sn@rule},xleftmargin=2em,framexleftmargin=2em,aboveskip=1em,belowskip=1em}
+
+%% theorem styles: upright body, coloured sans heads (colour set by the box)
+\newtheoremstyle{snplain}{0pt}{0pt}{\normalfont}{}{\sffamily\bfseries\color{sn@head}}{.}{.6em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ \normalfont\sffamily(#3)}}
+\newtheoremstyle{sndefinition}{0pt}{0pt}{\normalfont}{}{\sffamily\bfseries\color{sn@head}}{.}{.6em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ \normalfont\sffamily(#3)}}
+\newtheoremstyle{snremark}{0pt}{0pt}{\normalfont}{}{\sffamily\bfseries\color{sn@head}}{.}{.6em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ \normalfont\sffamily(#3)}}
+
+%% boxes
+\tcbset{
+  sn@box/.style={enhanced jigsaw,breakable,frame hidden,arc=0pt,outer arc=0pt,
+    colback=#1!6!white,borderline west={2.5pt}{0pt}{#1},
+    left=10pt,right=10pt,top=6pt,bottom=6pt,
+    before skip=1.1\baselineskip plus 2pt,after skip=1.1\baselineskip plus 2pt,
+    code={\colorlet{sn@head}{#1}}},
+  sn@light/.style={enhanced jigsaw,breakable,blanker,borderline west={1.2pt}{0pt}{#1},
+    left=10pt,before skip=.9\baselineskip,after skip=.9\baselineskip,
+    code={\colorlet{sn@head}{sn@exo}}}}
+\newcommand\sn@afterthms{%
+  \tcolorboxenvironment{theorem}{sn@box=sn@thm}%
+  \tcolorboxenvironment{proposition}{sn@box=sn@thm}%
+  \tcolorboxenvironment{lemma}{sn@box=sn@thm}%
+  \tcolorboxenvironment{corollary}{sn@box=sn@thm}%
+  \tcolorboxenvironment{property}{sn@box=sn@thm}%
+  \tcolorboxenvironment{law}{sn@box=sn@thm}%
+  \tcolorboxenvironment{definition}{sn@box=sn@def}%
+  \tcolorboxenvironment{notation}{sn@box=sn@def}%
+  \tcolorboxenvironment{example}{sn@box=sn@ex}%
+  \tcolorboxenvironment{method}{sn@box=sn@meth}%
+  \tcolorboxenvironment{exercise}{sn@box=sn@exo}%
+  \tcolorboxenvironment{remark}{sn@light=sn@rem}}
+
+%% proofs: small coloured QED, sans label
+\renewcommand\qedsymbol{\textcolor{sn@accent}{\rule{.5em}{.5em}}}
+
+%% title: tinted block with accent bar
+\renewcommand\maketitle{%
+  \begin{tcolorbox}[enhanced,frame hidden,arc=0pt,colback=sn@accent!5!white,
+      borderline west={4pt}{0pt}{sn@accent},left=14pt,right=14pt,top=12pt,bottom=12pt]
+    \raggedright
+    {\sffamily\bfseries\huge\color{sn@ink}\@title\par}%
+    \ifx\sn@subtitle\@empty\else\vspace{.8ex}{\sffamily\Large\color{sn@accent}\sn@subtitle\par}\fi
+    \vspace{1.8ex}{\sffamily\begin{tabular}[t]{@{}l@{}}\@author\end{tabular}\par}%
+    \vspace{.4ex}{\sffamily\small\color{sn@muted}\@date\par}%
+    \ifx\sn@basedon\@empty\else
+      \vspace{1ex}{\sffamily\footnotesize\color{sn@muted}\sn@basedonlabel\ \sn@basedon\par}\fi
+  \end{tcolorbox}%
+  \vspace{2ex}\thispagestyle{plain}}
+
+\endinput

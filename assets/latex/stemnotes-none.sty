@@ -1,0 +1,15 @@
+%% stemnotes-none.sty — "none": for a class or preamble imposed by a university or a
+%% journal. Changes nothing in the layout: no fonts, page size, headings, running
+%% heads or title. Only the theorem styles stemnotes needs are defined, with AMS
+%% defaults; environments the class already provides are kept as they are.
+%% Loaded by stemnotes.sty; do not load directly.
+\ProvidesPackage{stemnotes-none}[2026/10/17 v1.1 no layout]
+
+\newtheoremstyle{snplain}{\topsep}{\topsep}{\itshape}{}{\bfseries}{.}{.5em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ \normalfont(#3)}}
+\newtheoremstyle{sndefinition}{\topsep}{\topsep}{\normalfont}{}{\bfseries}{.}{.5em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ \normalfont(#3)}}
+\newtheoremstyle{snremark}{.6\topsep}{.6\topsep}{\normalfont}{}{\itshape}{.}{.5em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}}
+
+\endinput

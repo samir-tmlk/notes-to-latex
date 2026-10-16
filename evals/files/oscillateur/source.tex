@@ -1,0 +1,42 @@
+% Source document for the evaluation set: a typed teacher handout with planted traps.
+% Traps: (1) wrong period T_0 = pi/omega_0 (must become \suspect, not be corrected),
+% (2) crossed-out words (must become \struck), (3) on the simulated photos, the last
+% line of page 2 is cut off (must become \missing).
+\documentclass[11pt,a4paper]{article}
+\usepackage[french]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage[normalem]{ulem}
+\usepackage[a4paper,margin=25mm]{geometry}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\begin{document}
+\textbf{\Large Chapitre 3 -- Oscillateur harmonique}
+
+\textbf{Déf.} Un système de position $x(t)$ est un \emph{oscillateur harmonique} s'il vérifie
+\[ \ddot{x} + \omega_0^2\, x = 0 \qquad (1) \]
+où $\omega_0 > 0$ est la pulsation propre.
+
+\textbf{Prop.} Les solutions de (1) sont les fonctions $x(t) = A\cos(\omega_0 t + \varphi)$, avec $A \geq 0$ et $\varphi \in \mathbb{R}$.
+
+\textbf{Rq.} \sout{On admet que} Le mouvement est périodique, de période
+\[ T_0 = \frac{\pi}{\omega_0}. \]
+
+\textbf{Énergie.} Pour une masse $m$ reliée à un ressort de raideur $k$, on a $\omega_0 = \sqrt{k/m}$ et
+\[ E = \frac{1}{2} m \dot{x}^2 + \frac{1}{2} k x^2 . \]
+
+\newpage
+\textbf{Ex.} Pour $m = 0{,}2$ kg et $k = 20$ N/m, on obtient $\omega_0 = 10$ rad/s.
+
+\textbf{Algorithme (Euler symplectique)}
+
+\begin{tabular}{l}
+pour $n = 0$ à $N-1$ : \\
+\quad $v_{n+1} \leftarrow v_n - h\,\omega_0^2\, x_n$ \\
+\quad $x_{n+1} \leftarrow x_n + h\, v_{n+1}$ \\
+\end{tabular}
+
+\textbf{Exercice.} Montrer que $E$ est constante au cours du mouvement.
+
+Indication : dériver $E$ par rapport au temps et utiliser (1).
+\end{document}

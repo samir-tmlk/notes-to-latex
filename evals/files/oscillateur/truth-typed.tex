@@ -1,0 +1,57 @@
+% Ground truth for source.pdf (typed handout), unattended run, edited level.
+% Only what the scorer needs: content blocks, display equations and marks.
+\section{Oscillateur harmonique}
+
+\begin{definition}
+\src{p01}
+Un système de position $x(t)$ est un \emph{oscillateur harmonique} s'il vérifie
+\begin{equation}\label{eq-oh}
+  \ddot{x} + \omega_0^2\, x = 0
+\end{equation}
+où $\omega_0 > 0$ est la pulsation propre.
+\end{definition}
+
+\begin{property}
+\src{p01}
+Les solutions de \eqref{eq-oh} sont les fonctions $x(t) = A\cos(\omega_0 t + \varphi)$,
+avec $A \geq 0$ et $\varphi \in \R$.
+\end{property}
+
+\begin{remark}
+\src{p01}
+\struck{On admet que} Le mouvement est périodique, de période
+\[
+  \suspect{T_0 = \frac{\pi}{\omega_0}}{x(t) = A cos(omega_0 t + phi) a pour période 2 pi / omega_0 (propriété p01)}.
+\]
+\end{remark}
+
+\src{p01}
+\textbf{Énergie.} Pour une masse $m$ reliée à un ressort de raideur $k$, on a
+$\omega_0 = \sqrt{k/m}$ et
+\[
+  E = \frac{1}{2} m \dot{x}^2 + \frac{1}{2} k x^2 .
+\]
+
+\begin{example}
+\src{p02}
+Pour $m = \qty{0,2}{\kilogram}$ et $k = \qty{20}{\newton\per\metre}$, on obtient
+$\omega_0 = \qty{10}{\radian\per\second}$.
+\end{example}
+
+\begin{algorithm}[htbp]
+\caption{Euler symplectique\src{p02}}
+\begin{algorithmic}
+  \For{$n = 0$ \textbf{à} $N-1$}
+    \State $v_{n+1} \gets v_n - h\,\omega_0^2\, x_n$
+    \State $x_{n+1} \gets x_n + h\, v_{n+1}$
+  \EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\begin{exercise}
+\src{p02}
+Montrer que $E$ est constante au cours du mouvement.
+\end{exercise}
+
+\src{p02}
+Indication : dériver $E$ par rapport au temps et utiliser \eqref{eq-oh}.

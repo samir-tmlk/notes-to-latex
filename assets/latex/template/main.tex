@@ -1,0 +1,25 @@
+% main.tex — project skeleton. Copy this folder, then fill it phase by phase.
+% Compile: lualatex main.tex (twice), or python3 <skill>/scripts/build.py main.tex
+\documentclass[11pt]{article}
+% style   = classic | tufte | boxed | none   (none: imposed class; see references/api.md)
+% lang    = french | english          (language of the source)
+% vectors = arrow | bold              (as written in the source, phase 2)
+% mode    = draft | final             (final compiles only once no open mark remains)
+\usepackage[style=classic,lang=french,vectors=arrow,mode=draft]{stemnotes}
+\input{notation}
+
+\title{TITLE AS WRITTEN IN THE SOURCE}
+\subtitle{}            % optional
+\author{}              % the teacher or author named in the source; leave empty if none
+\date{}                % as in the source; leave empty if none
+\basedon{}             % provenance, e.g. "handwritten notes, lecture of ..., 6 photographed pages"
+\runningtitle{}        % short title for running heads (optional)
+
+\begin{document}
+\maketitle
+% \tableofcontents     % for documents with more than ~3 sections
+
+% One file per chapter or lecture keeps diffs and checks readable.
+\input{content/01}
+
+\end{document}

@@ -1,0 +1,99 @@
+%% stemnotes-tufte.sty — "Tufte": after Tufte-LaTeX and the Feynman-style
+%% lecture handout. Palatino, narrow text block with a wide margin for
+%% sidenotes and small figures, italic headings, no bold.
+%% Loaded by stemnotes.sty; do not load directly.
+\ProvidesPackage{stemnotes-tufte}[2026/10/16 v1.0 tufte style]
+
+%% fonts: Palatino family, with fallbacks for minimal installations
+\ifsn@unicode
+  \RequirePackage{unicode-math}
+  \IfFontExistsTF{TeX Gyre Pagella}{\setmainfont{TeX Gyre Pagella}}{}
+  \IfFontExistsTF{texgyrepagella-math.otf}
+    {\setmathfont{texgyrepagella-math.otf}}
+    {\setmathfont{Latin Modern Math}}
+  \IfFontExistsTF{TeX Gyre Heros}{\setsansfont[Scale=0.88]{TeX Gyre Heros}}{}
+  \sn@monofont{0.95}
+\else
+  \IfFileExists{newpxtext.sty}
+    {\RequirePackage{newpxtext}\RequirePackage{newpxmath}}
+    {\RequirePackage{mathpazo}}
+  \IfFileExists{tgheros.sty}{}{\renewcommand\sfdefault{lmss}}% newpxtext expects TeX Gyre Heros
+  \IfFileExists{inconsolata.sty}{\RequirePackage[scaled=0.95]{inconsolata}}{}
+\fi
+\linespread{1.06}
+
+%% page: 113 mm text block + 48 mm margin column on A4
+\RequirePackage[a4paper,left=24mm,textwidth=113mm,marginparsep=8mm,
+  marginparwidth=48mm,headheight=14pt,top=27mm,bottom=30mm,headsep=9mm,footskip=13mm]{geometry}
+\setlength{\parindent}{1.2em}
+
+%% colours: ink only, very muted accent
+\definecolor{sn@accent}{HTML}{3A3A3A}
+\definecolor{sn@link}{HTML}{6E2C2C}
+
+%% headings (titlesec), running heads (fancyhdr), equations numbered within sections
+\RequirePackage{titlesec}
+\RequirePackage{fancyhdr}
+\numberwithin{equation}{section}
+%% heading look: italic, no bold
+\titleformat{\section}{\normalfont\Large\itshape}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\itshape}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}[runin]{\normalfont\itshape}{\thesubsubsection}{.6em}{}[.]
+\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{1.6ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{2.8ex plus .8ex minus .2ex}{1ex plus .2ex}
+
+%% letter-spaced small caps (microtype cannot letter-space under XeTeX)
+\ifxetex\newcommand\sn@ls[1]{#1}\else\newcommand\sn@ls[1]{\textls[60]{#1}}\fi
+
+%% running heads extended over the margin column
+\newlength\sn@fullwidth
+\setlength\sn@fullwidth{\dimexpr\textwidth+\marginparsep+\marginparwidth\relax}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyheadoffset[R]{\dimexpr\marginparsep+\marginparwidth\relax}
+\fancyfootoffset[R]{\dimexpr\marginparsep+\marginparwidth\relax}
+\fancyhead[L]{\small\scshape\sn@ls{\sn@runtitle}}
+\fancyhead[R]{\small\thepage}
+\renewcommand\headrulewidth{0pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[R]{\small\thepage}\renewcommand\headrulewidth{0pt}}
+
+%% captions
+\captionsetup{font=small,labelfont=sc,labelsep=period,justification=raggedright,singlelinecheck=false}
+
+%% theorem styles: small-caps heads, italic statements
+\newtheoremstyle{snplain}{\topsep}{\topsep}{\itshape}{}{\scshape}{.}{.6em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ \normalfont\itshape(#3)}}
+\newtheoremstyle{sndefinition}{\topsep}{\topsep}{\normalfont}{}{\scshape}{.}{.6em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ \normalfont\itshape(#3)}}
+\newtheoremstyle{snremark}{.6\topsep}{.6\topsep}{\normalfont}{}{\itshape}{.}{.5em}
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}}
+
+%% sidenotes: numbered, in the margin; \marginnote inside boxes, \marginpar elsewhere
+\newcounter{sn@side}
+\renewcommand*{\raggedrightmarginnote}{\raggedright}
+\newcommand\sn@sidebody[1]{\footnotesize\raggedright\textsuperscript{\thesn@side}\,#1}
+\newcommand\aside[1]{%
+  \refstepcounter{sn@side}\textsuperscript{\thesn@side}%
+  \begingroup\ifinner\sn@inboxtrue\fi
+  \ifsn@inbox\marginnote{\sn@sidebody{#1}}\else\marginpar{\sn@sidebody{#1}}\fi
+  \endgroup}
+\newsavebox\sn@mfigbox
+\newcommand\sn@mfigbegin{\begin{lrbox}{\sn@mfigbox}\begin{minipage}{\marginparwidth}
+  \centering\captionsetup{type=figure,font=footnotesize}}
+\newcommand\sn@mfigend{\end{minipage}\end{lrbox}\marginpar{\usebox{\sn@mfigbox}}}
+\newcommand\sn@widebegin{\begin{adjustwidth}{0pt}{-\dimexpr\marginparsep+\marginparwidth\relax}}
+\newcommand\sn@wideend{\end{adjustwidth}}
+
+%% title: left-aligned, Tufte handout
+\renewcommand\maketitle{%
+  \begingroup\raggedright
+  {\LARGE\itshape\@title\par}%
+  \ifx\sn@subtitle\@empty\else\vspace{.6ex}{\large\itshape\color{sn@muted}\sn@subtitle\par}\fi
+  \vspace{2.2ex}{\scshape\sn@ls{\begin{tabular}[t]{@{}l@{}}\@author\end{tabular}}\par}%
+  \vspace{.6ex}{\small\@date\par}%
+  \ifx\sn@basedon\@empty\else
+    \vspace{1ex}{\footnotesize\itshape\color{sn@muted}\sn@basedonlabel\ \sn@basedon\par}\fi
+  \vspace{5ex}\endgroup
+  \thispagestyle{plain}}
+
+\endinput

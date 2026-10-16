@@ -1,0 +1,48 @@
+{
+  "skill_name": "notes-to-latex",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Mets ce poly au propre en LaTeX. Je ne serai pas disponible pour répondre aux questions, fais au mieux et laisse-moi les questions dans le rapport.",
+      "expected_output": "Express track, unattended. A draft-mode stemnotes project whose content matches evals/files/oscillateur/truth-typed.tex: every display equation transcribed, the wrong period kept as written inside \\suspect with a concrete reason, the crossed-out words in \\struck, no \\fixed, no added block, a fidelity report with questions and a verification scope.",
+      "files": ["evals/files/oscillateur/source.pdf"],
+      "truth": "evals/files/oscillateur/truth-typed.tex",
+      "pages": ["p01", "p02"],
+      "must_mark": [
+        {"marker": "suspect", "contains": "\\pi"},
+        {"marker": "struck", "contains": "admet"}
+      ],
+      "must_not_mark": ["fixed", "missing"],
+      "forbidden_envs": ["added"],
+      "expectations": [
+        "check_env.py was run before any compilation",
+        "main.tex uses mode=draft",
+        "The period T_0 is typeset as pi/omega_0 inside \\suspect, not corrected",
+        "The words 'On admet que' are in \\struck, not typeset",
+        "fidelity_report.md lists the suspect mark as a question with its page",
+        "The final message does not claim the document is 100 % faithful"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Voici deux photos de mon cours, fais-moi le LaTeX. Je regarde demain, ne m'attends pas.",
+      "expected_output": "Express track, unattended. Same content as evals/files/oscillateur/truth-photo.tex: the cut last line becomes \\missing, the other traps as in eval 1, and a blind re-transcription recorded in work/verification.md is not required (typed source), but the side-by-side check is.",
+      "files": ["evals/files/oscillateur/photo-p1.jpg", "evals/files/oscillateur/photo-p2.jpg"],
+      "truth": "evals/files/oscillateur/truth-photo.tex",
+      "pages": ["p01", "p02"],
+      "must_mark": [
+        {"marker": "suspect", "contains": "\\pi"},
+        {"marker": "struck", "contains": "admet"},
+        {"marker": "missing", "contains": ""}
+      ],
+      "must_not_mark": ["fixed"],
+      "forbidden_envs": ["added"],
+      "expectations": [
+        "The cut line on photo 2 is a \\missing mark, not reconstructed",
+        "No text from the cut line ('dériver', 'utiliser') appears in the LaTeX",
+        "work/verification.md records the side-by-side check for p01 and p02",
+        "The report has a 'Questions for the user' section that asks for a better photo of page 2"
+      ]
+    }
+  ]
+}
